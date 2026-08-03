@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Eye, EyeOff } from 'lucide-react'
-import Image from 'next/image'
+import { signIn } from '@/lib/api'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -11,22 +12,25 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    if (!email || !password) {
+      setError('Veuillez remplir tous les champs')
+      return
+    }
     setIsLoading(true)
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      if (!email || !password) {
-        setError('Veuillez remplir tous les champs')
+      const { error: signInError } = await signIn(email, password)
+      if (signInError) {
+        setError(signInError.message || 'Email ou mot de passe incorrect')
         return
       }
-
-      window.location.href = '/'
-    } catch (err) {
+      router.push('/')
+    } catch {
       setError('Erreur lors de la connexion')
     } finally {
       setIsLoading(false)

@@ -1,10 +1,5 @@
-import { DashboardShell } from "@/components/dashboard/dashboard-shell"
-import { OpportunitiesContent } from "@/components/dashboard/opportunities-content"
+import { redirect } from 'next/navigation'
 
-export default function OpportunitiesPage() {
-  return (
-    <DashboardShell title="Opportunites Professionnelles">
-      <OpportunitiesContent />
-    </DashboardShell>
-  )
+export default function OpportunitesRedirect() {
+  redirect('/opportunities')
 }

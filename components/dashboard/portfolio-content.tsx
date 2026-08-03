@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
@@ -11,7 +11,13 @@ import {
   Plus,
   X,
   Save,
+  Loader2,
+  Award,
+  TrendingUp,
+  Target,
 } from "lucide-react"
+import { getUserSessions, getCertifications } from "@/lib/api"
+import type { SimulationSession, Certification } from "@/lib/types"
 
 /* ------------------------------------------------------------------ */
 /*  TYPES                                                              */
@@ -121,6 +127,23 @@ const inputClass =
 
 export function PortfolioContent() {
   const [editing, setEditing] = useState(false)
+  const [sessions, setSessions] = useState<SimulationSession[]>([])
+  const [certs, setCerts] = useState<Certification[]>([])
+  const [proofsLoading, setProofsLoading] = useState(true)
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [userSessions, certData] = await Promise.all([getUserSessions(), getCertifications()])
+        setSessions(userSessions.filter(s => s.status === "completed"))
+        setCerts(certData)
+      } catch (err) {
+        console.error("Failed to load portfolio proofs:", err)
+      } finally {
+        setProofsLoading(false)
+      }
+    })()
+  }, [])
 
   /* State */
   const [bio, setBio] = useState(
@@ -260,6 +283,65 @@ export function PortfolioContent() {
         {/*  LEFT COLUMN                                               */}
         {/* ========================================================= */}
         <div className="flex flex-col gap-6 lg:col-span-3">
+          {/* ---- StudieSkills Proofs (real data) ---- */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold text-card-foreground flex items-center gap-2">
+                <Award className="size-4 text-primary" />
+                Preuves de compétences StudieSkills
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {proofsLoading ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="size-4 animate-spin" />
+                  Chargement...
+                </div>
+              ) : sessions.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Aucune simulation terminée. Completez des simulations pour afficher vos preuves ici.
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="rounded-lg border border-border p-3 text-center">
+                      <TrendingUp className="size-4 text-primary mx-auto mb-1" />
+                      <p className="text-2xl font-bold text-foreground">{sessions.length}</p>
+                      <p className="text-xs text-muted-foreground">Simulations</p>
+                    </div>
+                    <div className="rounded-lg border border-border p-3 text-center">
+                      <Target className="size-4 text-green-600 mx-auto mb-1" />
+                      <p className="text-2xl font-bold text-foreground">
+                        {Math.round(sessions.reduce((sum, s) => sum + (s.score || 0), 0) / sessions.length)}%
+                      </p>
+                      <p className="text-xs text-muted-foreground">Score moyen</p>
+                    </div>
+                    <div className="rounded-lg border border-border p-3 text-center">
+                      <Award className="size-4 text-orange-500 mx-auto mb-1" />
+                      <p className="text-2xl font-bold text-foreground">{certs.length}</p>
+                      <p className="text-xs text-muted-foreground">Certifications</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {sessions.slice(0, 5).map((s) => (
+                      <div key={s.id} className="flex items-center justify-between rounded-lg border border-border p-3">
+                        <div>
+                          <p className="text-sm font-medium text-foreground">
+                            {(s as any).simulator?.title ?? "Simulation"}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(s.completed_at ?? s.started_at).toLocaleDateString('fr-FR')}
+                          </p>
+                        </div>
+                        <span className="text-sm font-bold text-primary">{s.score}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* ---- A propos de moi ---- */}
           <Card>
             <CardHeader className="pb-3">

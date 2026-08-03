@@ -1,37 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { Award, Medal, Star, Lock, Share2, Calendar, Trophy, Target, Zap, Flame, Layers, Crown } from "lucide-react"
-
-const stats = [
-  {
-    icon: Medal,
-    value: "3",
-    label: "Badges Obtenus",
-    color: "bg-primary/10 text-primary",
-  },
-  {
-    icon: Award,
-    value: "2",
-    label: "Certifications",
-    color: "bg-green-50 text-green-600",
-  },
-  {
-    icon: Star,
-    value: "55",
-    label: "Points Totaux",
-    color: "bg-orange-50 text-orange-500",
-  },
-  {
-    icon: Lock,
-    value: "10",
-    label: "A Debloquer",
-    color: "bg-blue-50 text-blue-600",
-  },
-]
+import { Award, Medal, Star, Lock, Share2, Calendar, Trophy, Target, Zap, Flame, Layers, Crown, Loader2 } from "lucide-react"
+import { getCertifications, getUserSessions } from "@/lib/api"
+import type { Certification, SimulationSession } from "@/lib/types"
 
 interface BadgeItem {
   id: string
@@ -159,6 +134,40 @@ const tabs = ["Badges", "Certifications"] as const
 
 export function BadgesCertificationsContent() {
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("Badges")
+  const [certs, setCerts] = useState<Certification[]>([])
+  const [completedSessions, setCompletedSessions] = useState(0)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  async function loadData() {
+    try {
+      const [certData, sessions] = await Promise.all([getCertifications(), getUserSessions()])
+      setCerts(certData)
+      setCompletedSessions(sessions.filter(s => s.status === "completed").length)
+    } catch (err) {
+      console.error("Failed to load certifications:", err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const dynamicStats = [
+    { icon: Medal, value: String(completedSessions >= 1 ? 3 : 0), label: "Badges Obtenus", color: "bg-primary/10 text-primary" },
+    { icon: Award, value: String(certs.length), label: "Certifications", color: "bg-green-50 text-green-600" },
+    { icon: Star, value: String(completedSessions * 10), label: "Points Totaux", color: "bg-orange-50 text-orange-500" },
+    { icon: Lock, value: "10", label: "A Debloquer", color: "bg-blue-50 text-blue-600" },
+  ]
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="size-8 animate-spin text-primary" />
+      </div>
+    )
+  }
 
   return (
     <>
@@ -178,7 +187,7 @@ export function BadgesCertificationsContent() {
           {"Impact en un coup d'oeil"}
         </h3>
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-          {stats.map((stat) => (
+          {dynamicStats.map((stat) => (
             <Card key={stat.label} className="gap-0 py-4">
               <CardContent className="flex items-center gap-3 px-4">
                 <div
@@ -218,7 +227,7 @@ export function BadgesCertificationsContent() {
         </div>
 
         {activeTab === "Badges" && <BadgesTab />}
-        {activeTab === "Certifications" && <CertificationsTab />}
+        {activeTab === "Certifications" && <CertificationsTab certifications={certs} />}
       </section>
     </>
   )
@@ -327,24 +336,34 @@ function LockedBadgeCard({ badge }: { badge: BadgeItem }) {
 
 /* ======================== Certifications Tab ======================== */
 
-function CertificationsTab() {
-  const obtained = certifications.filter((c) => c.status === "obtained")
-  const inProgress = certifications.filter((c) => c.status === "in_progress")
+function CertificationsTab({ certifications }: { certifications: Certification[] }) {
+  if (certifications.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-16">
+        <Award className="size-12 text-muted-foreground/40" />
+        <p className="mt-3 text-sm font-medium text-muted-foreground">
+          Aucune certification obtenue pour le moment
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Completez des simulations pour gagner des certifications
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-8">
-      {/* Obtained Certifications */}
       <div>
         <h3 className="mb-1 text-lg font-bold text-foreground">
           {"Certifications Obtenues ("}
-          {obtained.length}
+          {certifications.length}
           {")"}
         </h3>
         <p className="mb-5 text-sm text-muted-foreground">
           Vos certifications validees
         </p>
         <div className="grid gap-4 sm:grid-cols-2">
-          {obtained.map((cert) => (
+          {certifications.map((cert) => (
             <Card key={cert.id} className="gap-0 py-0 overflow-hidden">
               <CardContent className="flex items-start gap-4 p-5">
                 <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-green-50">
@@ -357,7 +376,11 @@ function CertificationsTab() {
                   <p className="mt-0.5 text-xs text-muted-foreground">{cert.issuer}</p>
                   <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Calendar className="size-3.5" />
-                    <span>{"Obtenue le "}{cert.date}</span>
+                    <span>{"Obtenue le "}{new Date(cert.issued_at).toLocaleDateString('fr-FR')}</span>
+                  </div>
+                  <div className="mt-2 flex items-center gap-1.5 text-xs">
+                    <Star className="size-3.5 text-orange-500" />
+                    <span className="font-semibold text-foreground">{cert.score}/100</span>
                   </div>
                   <div className="mt-3 flex gap-2">
                     <Button size="sm" variant="outline" className="h-7 text-xs">
@@ -368,50 +391,6 @@ function CertificationsTab() {
                       Telecharger
                     </Button>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-
-      {/* In Progress */}
-      <div>
-        <h3 className="mb-1 text-lg font-bold text-foreground">
-          {"En Cours ("}
-          {inProgress.length}
-          {")"}
-        </h3>
-        <p className="mb-5 text-sm text-muted-foreground">
-          Continuez vos parcours pour obtenir ces certifications
-        </p>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {inProgress.map((cert) => (
-            <Card key={cert.id} className="gap-0 py-0 overflow-hidden border-dashed">
-              <CardContent className="flex items-start gap-4 p-5">
-                <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-muted">
-                  <Award className="size-6 text-muted-foreground/50" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h4 className="text-sm font-bold text-card-foreground">
-                    {cert.title}
-                  </h4>
-                  <p className="mt-0.5 text-xs text-muted-foreground">{cert.issuer}</p>
-                  <div className="mt-3 w-full">
-                    <div className="mb-1.5 flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">Progression</span>
-                      <span className="text-xs font-semibold text-foreground">
-                        {cert.progression}%
-                      </span>
-                    </div>
-                    <Progress value={cert.progression} className="h-2" />
-                  </div>
-                  <Button
-                    size="sm"
-                    className="mt-3 h-7 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
-                  >
-                    Continuer
-                  </Button>
                 </div>
               </CardContent>
             </Card>

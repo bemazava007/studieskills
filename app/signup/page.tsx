@@ -2,9 +2,12 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Calendar } from 'lucide-react'
+import { signUp } from '@/lib/api'
 
 export default function SignupPage() {
+  const router = useRouter()
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
@@ -19,6 +22,7 @@ export default function SignupPage() {
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -40,12 +44,19 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSubmitError('')
     if (!validateForm()) return
 
     setIsLoading(true)
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      window.location.href = '/'
+      const { error: signUpError } = await signUp(formData.email, formData.password, formData.fullName)
+      if (signUpError) {
+        setSubmitError(signUpError.message || 'Erreur lors de la création du compte')
+        return
+      }
+      router.push('/')
+    } catch {
+      setSubmitError('Erreur lors de la création du compte')
     } finally {
       setIsLoading(false)
     }
@@ -74,6 +85,11 @@ export default function SignupPage() {
           <h1 className="text-3xl font-bold text-foreground mb-8">Créer votre compte</h1>
 
           <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-6">
+            {submitError && (
+              <div className="col-span-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
+                {submitError}
+              </div>
+            )}
             {/* Full Name */}
             <div>
               <input
