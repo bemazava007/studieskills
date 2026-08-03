@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { Search, MapPin, Briefcase, Clock, ChevronRight, Loader2, X } from 'lucide-react'
+import { Search, MapPin, Briefcase, Clock, ChevronRight, Loader as Loader2, X } from 'lucide-react'
+import { DashboardShell } from '@/components/dashboard/dashboard-shell'
 import { getJobOffers, applyToJob } from '@/lib/api'
 import type { JobOffer } from '@/lib/types'
 
@@ -60,24 +60,14 @@ export default function OpportunitiesPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="size-8 animate-spin text-primary" />
-      </div>
-    )
-  }
-
   return (
-    <div className="flex h-screen bg-background">
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="bg-card border-b border-border px-8 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-foreground">Opportunités d'emploi</h1>
-          <Link href="/" className="text-sm text-primary hover:underline">Tableau de bord</Link>
+    <DashboardShell title="Opportunités d'emploi">
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="size-8 animate-spin text-primary" />
         </div>
-
-        <div className="flex-1 overflow-auto">
-          <div className="p-8 space-y-6">
+      ) : (
+        <div className="space-y-6">
             <div className="space-y-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -167,9 +157,8 @@ export default function OpportunitiesPage() {
                 ))}
               </div>
             )}
-          </div>
         </div>
-      </div>
+      )}
 
       {showModal && selectedOffer && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
@@ -225,6 +214,6 @@ export default function OpportunitiesPage() {
           </div>
         </div>
       )}
-    </div>
+    </DashboardShell>
   )
 }
