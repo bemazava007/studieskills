@@ -10,26 +10,22 @@ import {
   Award,
   BarChart3,
   Briefcase,
-  Leaf,
   User,
-  LogOut,
   X,
   GraduationCap,
 } from "lucide-react"
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Tableau de bord", href: "/" },
-  { icon: Monitor, label: "Mes Simulateurs", href: "/simulateurs", badge: 3 },
+  { icon: LayoutDashboard, label: "Tableau de bord", href: "/simulateurs" },
+  { icon: Monitor, label: "Mes Simulateurs", href: "/simulateurs" },
   { icon: FolderOpen, label: "Mon Portfolio", href: "/portfolio" },
   { icon: Award, label: "Badge & Certification", href: "/certifications" },
   { icon: BarChart3, label: "Mes Performances", href: "/performances" },
-  { icon: Briefcase, label: "Opportunites", href: "/opportunites", badge: 2 },
-  { icon: Leaf, label: "Programmes RSE", href: "/rse", badge: 1 },
+  { icon: Briefcase, label: "Opportunités", href: "/opportunities" },
 ]
 
 const bottomItems = [
-  { icon: User, label: "Mon Profil", href: "/profil" },
-  { icon: LogOut, label: "Deconnexion", href: "/deconnexion" },
+  { icon: User, label: "Mon Profil", href: "/portfolio" },
 ]
 
 interface SidebarNavProps {
@@ -101,11 +97,7 @@ export function SidebarNav({ open, onClose }: SidebarNavProps) {
                   >
                     <item.icon className="size-[18px] shrink-0" />
                     <span className="flex-1">{item.label}</span>
-                    {item.badge && (
-                      <span className="flex size-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                        {item.badge}
-                      </span>
-                    )}
+
                   </Link>
                 </li>
               )
