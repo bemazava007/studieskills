@@ -6,6 +6,7 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, R
 import { Loader2 } from 'lucide-react'
 import { getUserSessions, getSessionEvaluations } from '@/lib/api'
 import type { SimulationSession, SkillEvaluation } from '@/lib/types'
+import { DashboardShell } from '@/components/dashboard/dashboard-shell'
 
 const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899']
 
@@ -69,6 +70,7 @@ export default function PerformancesPage() {
   }))
 
   return (
+    <DashboardShell title={'Mes Performances'}>
     <div className="flex h-screen bg-background">
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="bg-card border-b border-border px-8 py-4 flex items-center justify-between">
@@ -171,5 +173,6 @@ export default function PerformancesPage() {
         </div>
       </div>
     </div>
+    </DashboardShell>
   )
 }

@@ -13,6 +13,7 @@ import {
   User,
   X,
   GraduationCap,
+  Image,
 } from "lucide-react"
 
 const navItems = [
@@ -59,8 +60,8 @@ export function SidebarNav({ open, onClose }: SidebarNavProps) {
       >
         {/* Logo */}
         <div className="flex h-16 items-center gap-2.5 border-b border-sidebar-border px-5">
-          <div className="flex size-9 items-center justify-center rounded-lg bg-sidebar-primary">
-            <GraduationCap className="size-5 text-sidebar-primary-foreground" />
+          <div className="flex size-9 items-center justify-center rounded-lg">
+           <img src="/images/studies.png" alt="StudieSkills" className="size-full object-cover" />
           </div>
           <span className="text-lg font-bold text-sidebar-foreground">StudieSkills</span>
           <button

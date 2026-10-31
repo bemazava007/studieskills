@@ -20,6 +20,29 @@ interface ChatRequest {
 
 const MISTRAL_API_URL = 'https://api.mistral.ai/v1/chat/completions'
 const MISTRAL_MODEL = 'mistral-small-latest'
+async function fetchMistralWithRetry(
+  url: string,
+  options: RequestInit,
+  maxRetries = 3,
+): Promise<Response> {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const response = await fetch(url, options)
+
+    if (response.status !== 429) {
+      return response
+    }
+
+    if (attempt === maxRetries) {
+      return response
+    }
+
+    const delay = 1000 * Math.pow(2, attempt)
+
+    await new Promise(resolve => setTimeout(resolve, delay))
+  }
+
+  throw new Error('Mistral request failed after retries')
+}
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
@@ -51,27 +74,42 @@ Deno.serve(async (req: Request) => {
       { role: 'user' as const, content: user_message },
     ]
 
-    const mistralResponse = await fetch(MISTRAL_API_URL, {
-      method: 'POST',
+    const mistralResponse = await fetchMistralWithRetry(MISTRAL_API_URL, {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${mistralKey}`,
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    model: MISTRAL_MODEL,
+    messages,
+    temperature: 0.8,
+    max_tokens: 500,
+  }),
+})
+
+   if (!mistralResponse.ok) {
+  const errText = await mistralResponse.text()
+
+  const status = mistralResponse.status === 429
+    ? 429
+    : 502
+
+  return new Response(
+    JSON.stringify({
+      error: 'Mistral API error',
+      status: mistralResponse.status,
+      detail: errText,
+    }),
+    {
+      status,
       headers: {
-        'Authorization': `Bearer ${mistralKey}`,
+        ...corsHeaders,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: MISTRAL_MODEL,
-        messages,
-        temperature: 0.8,
-        max_tokens: 500,
-      }),
-    })
-
-    if (!mistralResponse.ok) {
-      const errText = await mistralResponse.text()
-      return new Response(
-        JSON.stringify({ error: `Mistral API error: ${mistralResponse.status}`, detail: errText }),
-        { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      )
-    }
+    },
+  )
+}
 
     const mistralData = await mistralResponse.json()
     const reply = mistralData.choices?.[0]?.message?.content ?? ''

@@ -15,6 +15,7 @@ import { BadgesCertificationsContent } from './badges-certifications-content'
 import { PerformancesContent } from './performances-content'
 import { OpportunitiesContent } from './opportunities-content'
 import type { Simulator } from './simulator-card'
+import PerformancesPage from '@/app/performances/page'
 
 type ViewType = 'dashboard' | 'detail' | 'scenario' | 'performance' | 'opportunities' | 'simulators' | 'portfolio' | 'certifications' | 'performances'
 
@@ -161,7 +162,12 @@ export function Dashboard() {
           onClose={handleCloseDetailsModal}
           onLaunch={handleLaunchFromModal}
         />
+        
       )}
+
+
+   
+
     </div>
   )
 }

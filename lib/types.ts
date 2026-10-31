@@ -3,6 +3,34 @@
 
 export type UserRole = 'student' | 'admin' | 'recruiter'
 
+
+export type SpeechResultLike = {
+  isFinal: boolean
+  0: { transcript: string }
+}
+
+export type SpeechEventLike = {
+  results: ArrayLike<SpeechResultLike>
+}
+
+export type SpeechRecognitionLike = {
+  lang: string
+  interimResults: boolean
+  continuous: boolean
+  onresult: ((event: SpeechEventLike) => void) | null
+  onerror: ((event: { error: string }) => void) | null
+  onend: (() => void) | null
+  start: () => void
+  stop: () => void
+  abort: () => void
+}
+
+export type SpeechWindow = Window & {
+  SpeechRecognition?: new () => SpeechRecognitionLike
+  webkitSpeechRecognition?: new () => SpeechRecognitionLike
+}
+
+
 export interface Profile {
   id: string
   full_name: string

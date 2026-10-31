@@ -1,5 +1,6 @@
 import { DashboardShell } from '@/components/dashboard/dashboard-shell'
 import { SimulatorDetails } from '@/components/dashboard/simulator-details'
+import LaunchSimulatorPage from './lancer/page'
 
 // Mock data for demonstration
 const simulatorsData: Record<string, any> = {
@@ -72,6 +73,7 @@ export default async function SimulatorPage({
   return (
     <DashboardShell title={simulator.title}>
       <SimulatorDetails {...simulator} />
+      
     </DashboardShell>
   )
 }
